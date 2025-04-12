@@ -75,6 +75,7 @@ class Arch_Wall:
         self.MultiMat = None
         self.Length = None
         self.lengthValue = 0
+        self.featureName = "Wall"
         self.continueCmd = False
         self.Width = params.get_param_arch("WallWidth")
         self.Height = params.get_param_arch("WallHeight")
@@ -194,7 +195,7 @@ class Arch_Wall:
             FreeCAD.ActiveDocument.recompute()
             # gui_utils.end_all_events()  # Causes a crash on Linux.
             self.tracker.finalize()
-            if self.continueCmd:
+            if FreeCADGui.draftToolBar.continueCmd.isChecked():
                 self.Activated()
 
     def addDefault(self):
@@ -319,16 +320,6 @@ class Arch_Wall:
         grid.addWidget(label3,4,0,1,1)
         grid.addWidget(value3,4,1,1,1)
 
-        label4 = QtGui.QLabel(translate("Arch","Con&tinue"))
-        value4 = QtGui.QCheckBox()
-        value4.setObjectName("ContinueCmd")
-        value4.setLayoutDirection(QtCore.Qt.RightToLeft)
-        label4.setBuddy(value4)
-        self.continueCmd = params.get_param("ContinueMode")
-        value4.setChecked(self.continueCmd)
-        grid.addWidget(label4,5,0,1,1)
-        grid.addWidget(value4,5,1,1,1)
-
         label5 = QtGui.QLabel(translate("Arch","Use sketches"))
         value5 = QtGui.QCheckBox()
         value5.setObjectName("UseSketches")
@@ -342,7 +333,6 @@ class Arch_Wall:
         value1.valueChanged.connect(self.setWidth)
         value2.valueChanged.connect(self.setHeight)
         value3.currentIndexChanged.connect(self.setAlign)
-        value4.stateChanged.connect(self.setContinue)
         value5.stateChanged.connect(self.setUseSketch)
         self.Length.returnPressed.connect(value1.setFocus)
         self.Length.returnPressed.connect(value1.selectAll)
@@ -396,16 +386,6 @@ class Arch_Wall:
         from draftutils import params
         self.Align = ["Center","Left","Right"][i]
         params.set_param_arch("WallAlignment",i)
-
-    def setContinue(self,i):
-        """Simple callback to set if the interactive mode will restart when finished.
-
-        This allows for several walls to be placed one after another.
-        """
-
-        from draftutils import params
-        self.continueCmd = bool(i)
-        params.set_param("ContinueMode", bool(i))
 
     def setUseSketch(self,i):
         """Simple callback to set if walls should based on sketches."""
