@@ -216,6 +216,8 @@ void QGISVGTemplate::clearClickHandles()
             delete child;
         }
      }
+
+    textFields.clear();
 }
 
 void QGISVGTemplate::createClickHandles()
