@@ -158,6 +158,7 @@ class DraftWorkbench(FreeCADGui.Workbench):
         from draftutils import grid_observer
         grid_observer._view_observer_setup()
         from draftutils import doc_observer
+        print("ACTIVATEEEEEEED!!!!")
         doc_observer._doc_observer_start()
         FreeCAD.Console.PrintLog("Draft workbench activated.\n")
 

@@ -27,7 +27,12 @@
 import sys
 
 import FreeCAD
+import FreeCAD as App
 import FreeCADGui
+from PySide6.QtWidgets import QAbstractItemView
+from draftutils import doc_observer
+from draftutils.todo import ToDo
+from PySide import QtCore
 
 QT_TRANSLATE_NOOP = FreeCAD.Qt.QT_TRANSLATE_NOOP
 translate = FreeCAD.Qt.translate
@@ -47,16 +52,39 @@ class BIM_Views:
             ),
             "Accel": "Ctrl+9",
         }
+    
+    def wait_for_tree_ready(self, _=None):
+        #top_level_item = self.tree_model.topLevelItem(0)
+        vm = findWidget()
+        if vm.isVisible():
+            ToDo.delay(self.update, None)
+        else:
+            #print("top_level_item.childCount(): ", top_level_item.childCount())
+            ToDo.delay(self.wait_for_tree_ready, None)
+            QtCore.QCoreApplication.processEvents()
 
     def Activated(self):
         from PySide import QtCore, QtGui
-
+        self.updateCalledOnce = False
         vm = findWidget()
         self.allItemsInTree = []
         bimviewsbutton = None
+        doc_observer._doc_observer_start()
         mw = FreeCADGui.getMainWindow()
         st = mw.statusBar()
         statuswidget = st.findChild(QtGui.QToolBar, "BIMStatusWidget")
+        mw = FreeCADGui.getMainWindow()
+        tree = mw.findChild(QtGui.QDockWidget, "Model")
+        # model = tree.findChild(QtGui.QWidget, "Model")
+        model_tree = tree.widget()
+        print("ACTIVATED")
+        self.tree_model = model_tree.findChild(QtGui.QTreeWidget)
+        print("self", self)
+        print("self.treemodel: ", self.tree_model)
+        self.tree_model.itemSelectionChanged.connect(self.on_selection_model)
+        #self.tree_model.itemClicked.connect(self.update)
+
+
         if statuswidget and hasattr(statuswidget, "bimviewsbutton"):
             bimviewsbutton = statuswidget.bimviewsbutton
         if vm:
@@ -82,6 +110,8 @@ class BIM_Views:
             vm.closeEvent = self.onClose
 
             # set context menu
+            vm.tree.setSelectionMode(QAbstractItemView.ExtendedSelection)
+            vm.viewtree.setSelectionMode(QAbstractItemView.ExtendedSelection)
             self.dialog.tree.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
             # set button
@@ -121,6 +151,8 @@ class BIM_Views:
             self.dialog.buttonActivate.setToolTip(translate("BIM","Activates the selected item"))
 
             # connect signals
+            #doc_observ = doc_observer.get_doc_observer()
+            #doc_observ.signalObjectsChanged.connect(self.update)
             self.dialog.buttonAddLevel.triggered.connect(self.addLevel)
             self.dialog.buttonAddProxy.triggered.connect(self.addProxy)
             self.dialog.buttonDelete.triggered.connect(self.delete)
@@ -130,6 +162,7 @@ class BIM_Views:
             self.dialog.buttonRename.triggered.connect(self.rename)
             self.dialog.buttonActivate.triggered.connect(self.activate)
             self.dialog.tree.itemClicked.connect(self.select)
+            vm.tree.itemSelectionChanged.connect(self.on_selection_bim_view)
             self.dialog.tree.itemDoubleClicked.connect(show)
             self.dialog.viewtree.itemDoubleClicked.connect(show)
             self.dialog.tree.itemChanged.connect(self.editObject)
@@ -166,7 +199,7 @@ class BIM_Views:
                 bimviewsbutton.setChecked(True)
             PARAMS.SetBool("RestoreBimViews", True)
 
-            self.update()
+            ToDo.delay(self.wait_for_tree_ready, None)
 
     def onClose(self, event):
         from PySide import QtGui
@@ -184,21 +217,30 @@ class BIM_Views:
         if vm:
             vm.dockLocationChanged.connect(self.onDockLocationChanged)
 
-    def update(self, retrigger=True):
+    def update(self, *args):
         "updates the view manager"
-
         from PySide import QtCore, QtGui
+        # model = tree.findChild(QtGui.QWidget, "Model")
+        #print("=========================================================================")
+        #print("ACTIVATED")
+        #print("self.tree_model.topLevelItemCount(): ", self.tree_model.topLevelItemCount())
+        #print("=========================================================================")
         import Draft
 
         vm = findWidget()
         if vm and FreeCAD.ActiveDocument:
+            #print("if vm and FreeCAD.ActiveDocument:")
+            #print("vm.isVisible(): ", vm.isVisible())
+            #print("vm.tree.state() != vm.tree.State.EditingState", vm.tree.state() != vm.tree.State.EditingState)
             if vm.isVisible() and (vm.tree.state() != vm.tree.State.EditingState):
                 vm.tree.clear()
                 self.allItemsInTree.clear()
                 treeViewItems = []  # QTreeWidgetItem to Display in tree
                 lvHold = []
                 soloProxyHold = []
+                #print("LEN FreeCAD.ActiveDocument.Objects", len(FreeCAD.ActiveDocument.Objects))
                 for obj in FreeCAD.ActiveDocument.Objects:
+                    #print("iterating object")
                     t = Draft.getType(obj)
                     if obj and (
                         t
@@ -330,9 +372,6 @@ class BIM_Views:
                             item.setBackground(0, QtGui.QBrush(activeColor, QtCore.Qt.SolidPattern))
                             item.setFont(0, bold)
 
-        if retrigger:
-            QtCore.QTimer.singleShot(UPDATEINTERVAL, self.update)
-
         # save state
         PARAMS.SetInt("ViewManagerColumnWidth", vm.tree.columnWidth(0))
         PARAMS.SetBool("ViewManagerFloating", vm.isFloating())
@@ -341,16 +380,44 @@ class BIM_Views:
         vm.tree.expandAll()
         vm.viewtree.expandAll()
 
-    def select(self, item, column=None):
-        "selects a doc object corresponding to an item"
+    def on_selection_model(self, *args):
+        from PySide import QtGui
+        vm = findWidget()
+        vm.tree.blockSignals(True)
+        self.tree_model.blockSignals(True)
+        vm.tree.clearSelection()
+        selected_items_model = self.tree_model.selectedItems()
+        selected_items_model_tooltips = [item.toolTip(0) for item in self.tree_model.selectedItems()]
+        selected_items_view_tooltips = [item.text(0) for item in vm.tree.selectedItems()]
+        print("Selected items model view: ", selected_items_model_tooltips)
+        for item in selected_items_model:
+            if item.text(0) not in selected_items_view_tooltips:
+                items = vm.tree.findItems(item.text(0), QtGui.Qt.MatchExactly | QtGui.Qt.MatchRecursive, 0)
+                if items:
+                    print("SELECTED: ", item.text(0))
+                    items[0].setSelected(True)
 
-        item.setSelected(True)
-        name = item.toolTip(0)
-        if name:
-            obj = FreeCAD.ActiveDocument.getObject(name)
-            if obj:
-                FreeCADGui.Selection.clearSelection()
-                FreeCADGui.Selection.addSelection(obj)
+        vm.tree.blockSignals(False)
+        self.tree_model.blockSignals(False)
+
+    def on_selection_bim_view(self, *args):
+        from PySide import QtGui
+        "selects a doc object corresponding to an item"
+        vm = findWidget()
+        vm.tree.blockSignals(True)
+        self.tree_model.blockSignals(True)
+        selected_items_view = vm.tree.selectedItems()
+        selected_items_view_tooltips = [item.text(0) for item in vm.tree.selectedItems()]
+        selected_items_model = [item.text(0) for item in self.tree_model.selectedItems()]
+        print("Selected items bim view: ", selected_items_view_tooltips)
+        FreeCADGui.Selection.clearSelection()
+        for item in selected_items_view:
+            it = item.toolTip(0)
+            obj = FreeCAD.ActiveDocument.getObject(it)
+            FreeCADGui.Selection.addSelection(obj)
+
+        vm.tree.blockSignals(False)
+        self.tree_model.blockSignals(False)
 
     def addLevel(self):
         "adds a building part"

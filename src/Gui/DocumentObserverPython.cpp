@@ -59,6 +59,15 @@ void DocumentObserverPython::removeObserver(const Py::Object& obj)
 DocumentObserverPython::DocumentObserverPython(const Py::Object& obj) : inst(obj)
 {
     //NOLINTBEGIN
+#define FC_PY_ELEMENT_ARG0(_name1, _name2)                                                         \
+    do {                                                                                           \
+        FC_PY_GetCallable(obj.ptr(), "slot" #_name1, py##_name1.py);                               \
+        if (!py##_name1.py.isNone())                                                               \
+            py##_name1.slot = App::GetApplication().signal##_name2.connect(                        \
+                std::bind(&DocumentObserverPython::slot##_name1, this));                           \
+    } while (0);
+
+
 #define FC_PY_ELEMENT_ARG1(_name1, _name2) do {\
         FC_PY_GetCallable(obj.ptr(), "slot" #_name1, py##_name1.py);\
         if (!py##_name1.py.isNone())\
@@ -75,6 +84,7 @@ DocumentObserverPython::DocumentObserverPython(const Py::Object& obj) : inst(obj
     }\
     while(0);
 
+    FC_PY_ELEMENT_ARG0(FinishOpenDocument, FinishOpenDocument)
     FC_PY_ELEMENT_ARG1(CreatedDocument, NewDocument)
     FC_PY_ELEMENT_ARG1(DeletedDocument, DeleteDocument)
     FC_PY_ELEMENT_ARG1(RelabelDocument, RelabelDocument)
@@ -210,20 +220,53 @@ void DocumentObserverPython::slotBeforeChangeObject(const Gui::ViewProvider& Obj
     }
 }
 
+void DocumentObserverPython::slotFinishOpenDocument()
+{
+    Base::PyGILStateLocker lock;
+    try {
+        // Py::Tuple args(1);
+        // args.setItem(0, Py::asObject(const_cast<App::DocumentObject&>(Obj).getPyObject()));
+        //  If a property is touched but not part of a document object then its name is null.
+        //  In this case the slot function must not be called.
+        // Obj.getPropertyName(&Prop);
+        Base::pyCall(pyFinishOpenDocument.ptr());
+    }
+    catch (Py::Exception&) {
+        Base::PyException e;  // extract the Python error text
+        e.ReportException();
+    }
+}
+
+void DocumentObserverPython::slotFinishRestoreDocument(const Gui::ViewProvider& Obj)
+{
+    Base::PyGILStateLocker lock;
+    try {
+        Py::Tuple args(1);
+        args.setItem(0, Py::asObject(const_cast<Gui::ViewProvider&>(Obj).getPyObject()));
+        // If a property is touched but not part of a document object then its name is null.
+        // In this case the slot function must not be called.
+        Base::pyCall(pyBeforeChangeObject.ptr(), args.ptr());
+    }
+    catch (Py::Exception&) {
+        Base::PyException e;  // extract the Python error text
+        e.ReportException();
+    }
+}
+
 void DocumentObserverPython::slotChangedObject(const Gui::ViewProvider& Obj,
                                                const App::Property& Prop)
 {
     Base::PyGILStateLocker lock;
     try {
-        Py::Tuple args(2);
+        Py::Tuple args(1);
         args.setItem(0, Py::asObject(const_cast<Gui::ViewProvider&>(Obj).getPyObject()));
         // If a property is touched but not part of a document object then its name is null.
         // In this case the slot function must not be called.
         const char* prop_name = Obj.getPropertyName(&Prop);
-        if (prop_name) {
-            args.setItem(1, Py::String(prop_name));
+        //if (prop_name) {
+            //args.setItem(1, Py::String(prop_name));
             Base::pyCall(pyChangedObject.ptr(),args.ptr());
-        }
+        //}
     }
     catch (Py::Exception&) {
         Base::PyException e; // extract the Python error text

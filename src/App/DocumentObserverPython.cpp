@@ -111,6 +111,7 @@ DocumentObserverPython::DocumentObserverPython(const Py::Object& obj)
     FC_PY_ELEMENT_ARG0(Redo, Redo)
     FC_PY_ELEMENT_ARG1(BeforeCloseTransaction, BeforeCloseTransaction)
     FC_PY_ELEMENT_ARG1(CloseTransaction, CloseTransaction)
+    FC_PY_ELEMENT_ARG0(FinishOpenDocument, FinishOpenDocument)
     FC_PY_ELEMENT_ARG2(StartSaveDocument, StartSaveDocument)
     FC_PY_ELEMENT_ARG2(FinishSaveDocument, FinishSaveDocument)
     FC_PY_ELEMENT_ARG1(AppendDynamicProperty, AppendDynamicProperty)
@@ -369,6 +370,23 @@ void DocumentObserverPython::slotChangedObject(const App::DocumentObject& Obj,
     catch (Py::Exception&) {
         Base::PyException e;  // extract the Python error text
         e.reportException();
+    }
+}
+
+void DocumentObserverPython::slotFinishOpenDocument()
+{
+    Base::PyGILStateLocker lock;
+    try {
+//Py::Tuple args(1);
+        //args.setItem(0, Py::asObject(const_cast<App::DocumentObject&>(Obj).getPyObject()));
+        // If a property is touched but not part of a document object then its name is null.
+        // In this case the slot function must not be called.
+        //Obj.getPropertyName(&Prop);
+        Base::pyCall(pyFinishOpenDocument.ptr());
+    }
+    catch (Py::Exception&) {
+        Base::PyException e;  // extract the Python error text
+        e.ReportException();
     }
 }
 

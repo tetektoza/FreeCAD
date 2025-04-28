@@ -77,6 +77,8 @@ private:
     void slotBeforeChangeObject(const App::DocumentObject& Obj, const App::Property& Prop);
     /** The property of an observed object has changed */
     void slotChangedObject(const App::DocumentObject& Obj, const App::Property& Prop);
+
+    void slotFinishOpenDocument();
     /** Undoes the last transaction of the document */
     void slotUndoDocument(const App::Document& Doc);
     /** Redoes the last undone transaction of the document */
@@ -148,6 +150,7 @@ private:
     Connection pyRecomputedDocument;
     Connection pyOpenTransaction;
     Connection pyCommitTransaction;
+    Connection pyFinishOpenDocument;
     Connection pyAbortTransaction;
     Connection pyUndo;
     Connection pyRedo;

@@ -23,6 +23,11 @@
 # ***************************************************************************
 
 import FreeCAD as App
+from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QTimer
+from bimcommands import BimViews
+
+document_locked = True  # Start locked
 
 if App.GuiUp:
     import FreeCADGui as Gui
@@ -30,12 +35,70 @@ if App.GuiUp:
 
     class _Draft_DocObserver():
 
+        def __init__(self):
+            print("DRAFT DOCOBSERVER")
+            self.bim_views = BimViews.BIM_Views()
         # See: /src/Gui/DocumentObserverPython.h
 
-        def slotDeletedDocument(self, gui_doc):
-            _finish_command_on_doc_close(gui_doc)
+        def _delay_update_if_unlocked(self):
+            global document_locked
+            if document_locked:
+                #print("Document is locked — skipping update.")
+                return
+            ToDo.delay(self.bim_views.update, None)
 
+        def slotDeletedDocument(self, gui_doc):
+            print("slotDeletedDocument")
+            document_locked = False
+            ToDo.delay(self.bim_views.update, None)
+        
+        def slotFinishOpenDocument(self):
+            global document_locked
+            print("slotFinishOpenDocument — unlocking")
+            document_locked = False
+            ToDo.delay(self.bim_views.update, None)
+
+        def slotDeletedObject(self, viewprovider_obj):
+            print("slotDeletedObject")
+            self._delay_update_if_unlocked()
+
+        # def slotBeforeChangeObject(self, obj, prop):
+        #     ToDo.delay(self.bim_views.update, None)
+
+        # def slotCreatedObject(self, viewprovider_obj):
+        #     ToDo.delay(self.bim_views.update, None)
+
+        def slotChangedObject(self, viewprovider_obj):
+            print("SLOT CHANGED OBJECT")
+            self._delay_update_if_unlocked()
+
+        # def slotChangedDocument(self, gui_doc, prop):
+        #     ToDo.delay(self.bim_views.update, None)
+
+        def slotCloseTransaction(self, abort):
+            print("slotCloseTransaction")
+            self._delay_update_if_unlocked()
+        def slotCommitTransaction(self, doc):
+            print("slotCommitTransaction")
+            self._delay_update_if_unlocked()
+
+        def slotRecomputedDocument(self, doc):
+            print("slotRecomputedDocument")
+            self._delay_update_if_unlocked()
+
+        def slotActivateDocument(self, doc):
+            print("slotActivateDocument")
+            document_locked = True
+            #ToDo.delay(self.bim_views.update, None)
+
+        def slotCreatedDocument(self, doc):
+            document_locked = True
+            # print("slotCreatedDocument")
+            #ToDo.delay(self.bim_views.update, None)
     _doc_observer = None
+
+    def get_doc_observer():
+        return _doc_observer
 
     def _doc_observer_start():
         global _doc_observer
