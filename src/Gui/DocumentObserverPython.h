@@ -71,6 +71,8 @@ private:
     void slotActivateDocument(const Gui::Document& Doc);
     /** Checks if a new object was added. */
     void slotCreatedObject(const Gui::ViewProvider& Obj);
+    void slotFinishOpenDocument();
+    void slotFinishRestoreDocument(const Gui::ViewProvider& Obj);
     /** Checks if the given object is about to be removed. */
     void slotDeletedObject(const Gui::ViewProvider& Obj);
     /** The property of an observed object has changed */
@@ -105,6 +107,8 @@ private:
     Connection pyChangedObject;
     Connection pyInEdit;
     Connection pyResetEdit;
+    Connection pyFinishRestoreDocument;
+    Connection pyFinishOpenDocument;
 };
 
 } //namespace Gui
