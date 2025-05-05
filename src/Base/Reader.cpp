@@ -160,8 +160,7 @@ inline const char* readerCast<const char*>(const char* value)
 }
 }  // anonymous namespace
 
-template<typename T>
-    requires Base::XMLReader::instantiated<T>
+template<Base::Instantiated T>
 T Base::XMLReader::getAttribute(const char* AttrName, T defaultValue) const
 {
     auto pos = AttrMap.find(AttrName);
@@ -172,8 +171,7 @@ T Base::XMLReader::getAttribute(const char* AttrName, T defaultValue) const
     return readerCast<T>(rawValue);
 }
 
-template<typename T>
-    requires Base::XMLReader::instantiated<T>
+template<Base::Instantiated T>
 T Base::XMLReader::getAttribute(const char* AttrName) const
 {
     auto pos = AttrMap.find(AttrName);
@@ -187,22 +185,27 @@ T Base::XMLReader::getAttribute(const char* AttrName) const
 }
 
 // Explicit template instantiation
-template bool Base::XMLReader::getAttribute<bool>(const char* AttrName, bool defaultValue) const;
-template bool Base::XMLReader::getAttribute<bool>(const char* AttrName) const;
-template const char* Base::XMLReader::getAttribute<const char*>(const char* AttrName,
-                                                                const char* defaultValue) const;
-template const char* Base::XMLReader::getAttribute<const char*>(const char* AttrName) const;
-template double Base::XMLReader::getAttribute<double>(const char* AttrName,
-                                                      double defaultValue) const;
-template double Base::XMLReader::getAttribute<double>(const char* AttrName) const;
-template int Base::XMLReader::getAttribute<int>(const char* AttrName, int defaultValue) const;
-template int Base::XMLReader::getAttribute<int>(const char* AttrName) const;
-template long Base::XMLReader::getAttribute<long>(const char* AttrName, long defaultValue) const;
-template long Base::XMLReader::getAttribute<long>(const char* AttrName) const;
-template unsigned long
+template BaseExport bool Base::XMLReader::getAttribute<bool>(const char* AttrName, bool defaultValue) const;
+template BaseExport bool Base::XMLReader::getAttribute<bool>(const char* AttrName) const;
+template BaseExport const char*
+Base::XMLReader::getAttribute<const char*>(const char* AttrName,
+                                                        const char* defaultValue) const;
+template BaseExport const char*
+Base::XMLReader::getAttribute<const char*>(const char* AttrName) const;
+template BaseExport double Base::XMLReader::getAttribute<double>(const char* AttrName,
+                                              double defaultValue) const;
+template BaseExport double Base::XMLReader::getAttribute<double>(const char* AttrName) const;
+template BaseExport int Base::XMLReader::getAttribute<int>(const char* AttrName,
+                                                           int defaultValue) const;
+template BaseExport int Base::XMLReader::getAttribute<int>(const char* AttrName) const;
+template BaseExport long Base::XMLReader::getAttribute<long>(const char* AttrName,
+                                                             long defaultValue) const;
+template BaseExport long Base::XMLReader::getAttribute<long>(const char* AttrName) const;
+template BaseExport unsigned long
 Base::XMLReader::getAttribute<unsigned long>(const char* AttrName,
                                              unsigned long defaultValue) const;
-template unsigned long Base::XMLReader::getAttribute<unsigned long>(const char* AttrName) const;
+template BaseExport unsigned long
+Base::XMLReader::getAttribute<unsigned long>(const char* AttrName) const;
 
 bool Base::XMLReader::hasAttribute(const char* AttrName) const
 {

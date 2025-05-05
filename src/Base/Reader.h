@@ -36,6 +36,8 @@
 
 #include "FileInfo.h"
 
+#include <type_traits>
+
 
 namespace zipios
 {
@@ -59,6 +61,14 @@ XERCES_CPP_NAMESPACE_END
 
 namespace Base
 {
+
+// all explicit template instatiations - this is for getting
+// a compile error, rather than linker error.
+template<typename T>
+concept Instantiated =
+    std::is_same_v<T, bool> || std::is_same_v<T, const char*> || std::is_same_v<T, double>
+    || std::is_same_v<T, int> || std::is_same_v<T, long> || std::is_same_v<T, unsigned long>;
+
 class Persistence;
 
 /** The XML reader class
@@ -227,27 +237,17 @@ public:
     /// check if the read element has a special attribute
     bool hasAttribute(const char* AttrName) const;
 
-private:
-    // all explicit template instatiations - this is for getting
-    // a compile error, rather than linker error.
-    template<typename T>
-    static constexpr bool instantiated =
-        (std::is_same_v<T, bool> || std::is_same_v<T, const char*> || std::is_same_v<T, double>
-         || std::is_same_v<T, int> || std::is_same_v<T, long> || std::is_same_v<T, unsigned long>);
-
 public:
     /// return the named attribute as T (does type checking); if missing return defaultValue.
     /// If defaultValue is not set, it will default to the default initilization of the
     /// corresponding type; bool: false, int: 0, ... as if one had used defaultValue=bool{}
     /// or defaultValue=int{}
     // General template, mark delete as it's not implemented, and should not be used!
-    template<typename T>
-        requires XMLReader::instantiated<T>
+    template<Base::Instantiated T>
     T getAttribute(const char* AttrName, T defaultValue) const;
 
     /// No default? Will throw exception if not found!
-    template<typename T>
-        requires XMLReader::instantiated<T>
+    template<Base::Instantiated T>
     T getAttribute(const char* AttrName) const;
 
     /// E.g. std::string, QString
