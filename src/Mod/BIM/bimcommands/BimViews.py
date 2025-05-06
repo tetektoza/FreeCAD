@@ -33,6 +33,7 @@ from PySide6.QtWidgets import QAbstractItemView
 from draftutils import doc_observer
 from draftutils.todo import ToDo
 from PySide import QtCore
+#from doc_observer import document_locked
 
 QT_TRANSLATE_NOOP = FreeCAD.Qt.QT_TRANSLATE_NOOP
 translate = FreeCAD.Qt.translate
@@ -219,6 +220,9 @@ class BIM_Views:
 
     def update(self, *args):
         "updates the view manager"
+        if doc_observer.document_locked:
+            return
+        print("Update")
         from PySide import QtCore, QtGui
         # model = tree.findChild(QtGui.QWidget, "Model")
         #print("=========================================================================")

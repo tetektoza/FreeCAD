@@ -27,7 +27,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtCore import QTimer
 from bimcommands import BimViews
 
-document_locked = True  # Start locked
+document_locked = False  # Start locked
 
 if App.GuiUp:
     import FreeCADGui as Gui
@@ -68,8 +68,8 @@ if App.GuiUp:
         # def slotCreatedObject(self, viewprovider_obj):
         #     ToDo.delay(self.bim_views.update, None)
 
-        def slotChangedObject(self, viewprovider_obj):
-            print("SLOT CHANGED OBJECT")
+        def slotChangedObject(self, viewprovider_obj, prop):
+            #print("SLOT CHANGED OBJECT")
             self._delay_update_if_unlocked()
 
         # def slotChangedDocument(self, gui_doc, prop):
@@ -87,14 +87,16 @@ if App.GuiUp:
             self._delay_update_if_unlocked()
 
         def slotActivateDocument(self, doc):
+            global document_locked
             print("slotActivateDocument")
             document_locked = True
-            #ToDo.delay(self.bim_views.update, None)
+            ToDo.delay(self.bim_views.update, None)
 
         def slotCreatedDocument(self, doc):
+            global document_locked
             document_locked = True
             # print("slotCreatedDocument")
-            #ToDo.delay(self.bim_views.update, None)
+            ToDo.delay(self.bim_views.update, None)
     _doc_observer = None
 
     def get_doc_observer():
