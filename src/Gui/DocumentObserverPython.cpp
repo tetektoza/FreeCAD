@@ -258,15 +258,15 @@ void DocumentObserverPython::slotChangedObject(const Gui::ViewProvider& Obj,
 {
     Base::PyGILStateLocker lock;
     try {
-        Py::Tuple args(1);
+        Py::Tuple args(2);
         args.setItem(0, Py::asObject(const_cast<Gui::ViewProvider&>(Obj).getPyObject()));
         // If a property is touched but not part of a document object then its name is null.
         // In this case the slot function must not be called.
         const char* prop_name = Obj.getPropertyName(&Prop);
-        //if (prop_name) {
-            //args.setItem(1, Py::String(prop_name));
+        if (prop_name) {
+            args.setItem(1, Py::String(prop_name));
             Base::pyCall(pyChangedObject.ptr(),args.ptr());
-        //}
+        }
     }
     catch (Py::Exception&) {
         Base::PyException e; // extract the Python error text

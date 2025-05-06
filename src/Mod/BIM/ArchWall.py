@@ -1362,7 +1362,8 @@ class _ViewProviderWall(ArchComponent.ViewProviderComponent):
                                 cols.extend([c for j in range(len(obj.Shape.Solids[i].Faces))])
                             obj.ViewObject.DiffuseColor = cols
         ArchComponent.ViewProviderComponent.updateData(self,obj,prop)
-        if len(obj.ViewObject.DiffuseColor) > 1:
+        print("obj.ViewObject: ", obj.ViewObject)
+        if hasattr(obj.ViewObject,"DiffuseColor") and len(obj.ViewObject.DiffuseColor) > 1:
             # force-reset colors if changed
             obj.ViewObject.DiffuseColor = obj.ViewObject.DiffuseColor
 
