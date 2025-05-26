@@ -1606,7 +1606,15 @@ def joinWalls(walls, delete=False):
                 else:
                     newSk = None
             if newSk:
+                # Store the original placement of the base wall
+                original_placement = base.Base.Placement
+
+                # Create the sketch with a consistent orientation
                 sk = Draft.makeSketch(base.Base, autoconstraints=True, addTo=newSk)
+
+                # Set the sketch's placement to match the original wall's placement
+                # This ensures the sketch has the correct orientation regardless of view
+                sk.Placement = original_placement
                 base.Base = sk
             else:
                 sk = base.Base
