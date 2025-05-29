@@ -65,8 +65,8 @@ if App.GuiUp:
         # def slotBeforeChangeObject(self, obj, prop):
         #     ToDo.delay(self.bim_views.update, None)
 
-        # def slotCreatedObject(self, viewprovider_obj):
-        #     ToDo.delay(self.bim_views.update, None)
+        def slotCreatedObject(self, viewprovider_obj):
+            ToDo.delay(self.bim_views.update, None)
 
         def slotChangedObject(self, viewprovider_obj, prop):
             #print("SLOT CHANGED OBJECT")

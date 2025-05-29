@@ -354,9 +354,9 @@ void ViewProviderGeometryObject::setSelectable(bool selectable)
 
 PyObject* ViewProviderGeometryObject::getPyObject()
 {
-    if (!pyViewObject) {
+    //if (!pyViewObject) {
         pyViewObject = new ViewProviderGeometryObjectPy(this);
-    }
+    //}
     pyViewObject->IncRef();
     return pyViewObject;
 }

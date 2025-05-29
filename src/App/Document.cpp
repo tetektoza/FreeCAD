@@ -1465,6 +1465,7 @@ std::vector<DocumentObject*> Document::readObjects(Base::XMLReader& reader)
             // otherwise we may cause a dependency to itself
             // Example: Object 'Cut001' references object 'Cut' and removing the
             // digits we make an object 'Cut' referencing itself.
+            OutputDebugStringA(std::string("===================== " + std::string(obj_name) + " ====================").c_str());
             DocumentObject* obj =
                 addObject(type.c_str(), obj_name, /*isNew=*/false, viewType.c_str(), partial);
             if (obj) {

@@ -259,7 +259,14 @@ void DocumentObserverPython::slotChangedObject(const Gui::ViewProvider& Obj,
     Base::PyGILStateLocker lock;
     try {
         Py::Tuple args(2);
-        args.setItem(0, Py::asObject(const_cast<Gui::ViewProvider&>(Obj).getPyObject()));
+        auto test1 = const_cast<Gui::ViewProvider&>(Obj).getPyObject();
+        std::string str = Obj.getTypeId().getName();
+        OutputDebugStringA((str + "\n" + Prop.getName() + "\n").c_str());
+        if (str.find("\nViewProviderGeometry") != str.npos) {
+            DebugBreak();
+        }
+        //auto recast = Py::asObject(test1);
+        //args.setItem(0, Py::asObject(const_cast<Gui::ViewProvider&>(Obj).getPyObject()));
         //// If a property is touched but not part of a document object then its name is null.
         //// In this case the slot function must not be called.
         //const char* prop_name = Obj.getPropertyName(&Prop);

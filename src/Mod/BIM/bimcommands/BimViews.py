@@ -162,7 +162,7 @@ class BIM_Views:
             self.dialog.buttonSaveView.triggered.connect(self.saveView)
             self.dialog.buttonRename.triggered.connect(self.rename)
             self.dialog.buttonActivate.triggered.connect(self.activate)
-            self.dialog.tree.itemClicked.connect(self.select)
+            #self.dialog.tree.itemClicked.connect(self.select)
             vm.tree.itemSelectionChanged.connect(self.on_selection_bim_view)
             self.dialog.tree.itemDoubleClicked.connect(show)
             self.dialog.viewtree.itemDoubleClicked.connect(show)
